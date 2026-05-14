@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react'; // Added Suspense here
 import { useSearchParams } from 'next/navigation';
 import ImageSlider from '../components/ImageSlider';
 import MovieCard from '../components/MovieCard';
@@ -18,7 +18,8 @@ interface MovieData {
   Plot: string;
 }
 
-export default function HomePage() {
+// 1. Move your original logic into this sub-component
+function MovieHomeContent() {
   const searchParams = useSearchParams();
   const initialSearchQuery = searchParams?.get('q') ?? '';
 
@@ -136,24 +137,20 @@ export default function HomePage() {
     }
   }, [initialSearchQuery, fetchMovies, fetchPopularMovies]);
 
-  // Handle user clicking "Rate" button on MovieCard
   const handleRateClick = (movie: MovieData) => {
     setSelectedMovie(movie);
   };
 
-  // Close the modal
   const handleCloseModal = () => {
     setSelectedMovie(null);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
-      {/* Image Slider Section */}
       <section className="w-full">
         <ImageSlider images={sliderImages} interval={4000} />
       </section>
 
-      {/* Main Content */}
       <main className="flex flex-col items-center p-8 max-w-7xl mx-auto w-full">
         {currentSearchTerm ? (
           <h1 className="text-4xl font-bold mb-6 mt-8 text-center">
@@ -190,11 +187,19 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Movie Detail & Review Modal */}
       <MovieDetailModal
         movie={selectedMovie}
         onClose={handleCloseModal}
       />
     </div>
+  );
+}
+
+// 2. The default export now wraps the content in Suspense
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>}>
+      <MovieHomeContent />
+    </Suspense>
   );
 }
